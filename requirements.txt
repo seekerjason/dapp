@@ -1,0 +1,8 @@
+flask
+google-generativeai
+gunicorn
+diffusers==0.22.1
+transformers
+scipy 
+ftfy 
+accelerate

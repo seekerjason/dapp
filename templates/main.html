@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name ="viewport" content ="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+
+<body>
+
+    <div class="container">
+        <div>
+            {% with message = get_flashed_messages(with_categories=True) %}
+            {% if message %}
+            {% for category, msg in message %}
+                {% if category=='error' %}
+                <div class="error">{{ msg }}</div>
+                {% else %}
+                <div class="info">{{ msg }}</div>
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endwith %}                    
+        </div>
+        <h2>Main Page</h2>
+        <div>
+        <form action="{{url_for('main')}}" method="post" id="myform">
+            <input type="hidden" name="instruction" id="instruction" value="">
+            <button type="button" class="w3-button" onclick="clickButton('Chatbot')">ChatBot</button>
+            <button type="button" class="w3-button" onclick="clickButton('Create')">Create New User</button>
+            <button type="button" class="w3-button" onclick="clickButton('Delete')">Delete Account</button>
+            <button type="button" class="w3-button" onclick="clickButton('Logout')">Log out</button>
+            <button type="button" class="w3-button" onclick="clickButton('Transfer')">Transfer</button>
+            <button type="button" class="w3-button" onclick="clickButton('Telegram')">Telegram</button>
+        </form>
+        </div>
+    </div>
+
+    <script>
+        function clickButton(command){
+            console.log("command="+command);
+            instruction=document.getElementById("instruction");
+            instruction.value=command;
+            submit=true;
+            if( command=='Delete'){
+                confirmed=confirm("Are you sure! Ok to proceed.");
+                console.log("confirmed="+confirmed);
+                //alert(confirmed);
+                if( confirmed==false ){
+                    instruction.value='';
+                    submit=false;                
+                }
+            }
+            if(submit==true){
+                console.log("form submitted!");
+                document.getElementById("myform").submit();
+            }
+        }
+
+    </script>    
+</body>
+</html>

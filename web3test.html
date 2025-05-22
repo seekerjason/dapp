@@ -1,0 +1,46 @@
+<head>
+
+    <meta name ="viewport" content ="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="static/styles.css">
+
+</head>
+
+<body>
+    <div class="container">
+        <h2>Retrieve Etherenum Block Number</h2>
+        <div class="tableFixHead">
+        <table >
+            <tr>
+            <th> Block Number </th>
+            <th> TIMESTAMP </th>
+            </tr>
+            <tbody id="mytable">
+            </tbody>
+        </table>
+        </div>
+        <div>
+            <button type="button" onclick="getblocknumber()">Get Block Number</button>
+        </div>
+    </div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script>
+    function getblocknumber(){
+        const web3 = new Web3(new Web3.providers.HttpProvider('https://sepolia.infura.io/v3/03df33cdc6004ea387c772a02f66edc6'));
+        web3.eth.getBlockNumber().then(blockNumber => {
+            let table = document.getElementById("mytable");
+            let ts = new Date();
+            let tsstr = String(ts.getDate()).padStart(2, '0')+'-'+String(ts.getMonth() + 1).padStart(2, '0')+"-"+
+                        ts.getFullYear()+" "+String(ts.getHours()).padStart(2, '0')+":"+
+                        String(ts.getMinutes()).padStart(2, '0')+":"+String(ts.getSeconds()).padStart(2, '0');
+            htmlstr=`<tr><td>${blockNumber}</td><td>${tsstr}</td></tr>`;
+            htmlstr+=table.innerHTML;
+            table.innerHTML=htmlstr;
+        });
+    }
+</script>
+
+
+
+          

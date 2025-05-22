@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name ="viewport" content ="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            {% with message = get_flashed_messages(with_categories=True) %}
+            {% if message %}
+            {% for category, msg in message %}
+                {% if category=='error' %}
+                <div class="error">{{ msg }}</div>
+                {% else %}
+                <div class="info">{{ msg }}</div>
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endwith %}                    
+        </div>
+        <h2>Web Application</h2>
+        <div>
+        <form action="{{url_for('index')}}" method="post" id="myform">
+            <label for="username"><b>Please enter your user name:</b></label>
+            <input type = "text" name="username" id="username" value="">           
+            <button type="submit" class="w3-button" >Log In</button>
+        </form>
+        </div>
+    </div>
+</body>
+</html>

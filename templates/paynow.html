@@ -1,0 +1,153 @@
+<head>
+    <meta name ="viewport" content ="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="static/styles.css">
+
+</head>
+
+<body>
+    <div class="container">
+        <h2>Transaction Histroy</h2>
+        <div class="tableFixHead">
+        <table >
+            <tr>
+            <th> Owner </th>
+            <th> Payer </th>
+            <th> Payee  </th>
+            <th> Amount </th>
+            <th> Timestamp </th>
+            </tr>
+            <tbody id="mytable">
+            </tbody>
+        </table>
+        </div>
+        <div>
+            <label for="payer"><b>Payer Addr</b></label>
+            <input id="payer" type="text">
+        </div>
+        <div>
+            <label for="payee"><b>Payee Addr</b></label>
+            <input id="payee" type="text">
+        </div>
+        <div>    
+            <label for="amount"><b>Money Transferred</b></label>
+            <input id="amount" type="text">
+        </div>
+        <div>    
+            <label for="message"><b>Message</b></label>
+            <input id="message" type="text">
+        </div>
+        <div>
+            <button type="button" onclick="transfer()">Transfer</button>
+            <button type="button" onclick="transaction()">Get Trans History</button>
+            <form action="{{url_for('main')}}" method="get">
+                <input type="submit" value="Main Page">
+            </form>
+        </div>
+    </div>
+</body>
+
+
+<script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+<script>
+    const contractAddress = "0xc5910273c7cdf16bf2dca7846b887e27903e80f9";
+    const contractABI = [
+        {
+            "inputs": [],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "inputs": [],
+            "name": "transaction",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "payer_add",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "payee_add",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "amount_transfer",
+                    "type": "uint256"
+                }
+            ],
+            "name": "weixin",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ];
+
+    const web3 = new Web3(Web3.givenProvider);
+    const contract = new web3.eth.Contract(contractABI, contractAddress);
+    console.log("web3: ", web3);
+    console.log("contract: ", contract);
+
+    async function transfer() {
+        const accounts = await web3.eth.requestAccounts();
+        const payer = document.getElementById('payer').value;
+        const payee = document.getElementById('payee').value;
+        const amount = document.getElementById('amount').value;
+        console.log(payer,payee,amount);        
+        console.log("accounts[0] " + accounts[0]);
+        await contract.methods.weixin(payer,payee,amount).send({ from: accounts[0]});
+        document.getElementById('message').value="Transfer is done successfully";
+    }
+
+    async function transaction() {
+        const result = await contract.methods.transaction().call();
+        const accounts = await web3.eth.requestAccounts();
+        //let result=[payer,payee, amount];
+        updatetable(result[0], result[1], result[2], accounts[0]);
+        document.getElementById('message').value="Transfer Histroy is refreshed successfully";
+        
+        /*
+        document.getElementById('view_payer').innerText = "Payer: " + result[0];
+        document.getElementById('view_payee').innerText = "Payee: " + result[1];
+        document.getElementById('view_amount').innerText = "Amount: " + result[2];
+        */
+    }
+
+    function updatetable(payer, payee, amount, owner){
+        let table=document.getElementById("mytable");
+        let htmlstr=table.innerHTML;
+        let ts=gettimestamp();
+        table.innerHTML=`<tr><td>${owner}</td><td>${payer}</td><td>${payee}</td><td>${amount}</td><td>${ts}</td></tr>`+htmlstr;
+    } 
+
+    function gettimestamp(){
+        let ts = new Date();
+        let tsstr = String(ts.getDate()).padStart(2, '0')+'-'+String(ts.getMonth() + 1).padStart(2, '0')+"-"+
+                    ts.getFullYear()+" "+String(ts.getHours()).padStart(2, '0')+":"+
+                    String(ts.getMinutes()).padStart(2, '0')+":"+String(ts.getSeconds()).padStart(2, '0');        
+        
+        return tsstr;
+    }
+
+</script>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name ="viewport" content ="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+
+<body>
+
+    <div class="container">
+        <div>
+            {% with message = get_flashed_messages(with_categories=True) %}
+            {% if message %}
+            {% for category, msg in message %}
+                {% if category=='error' %}
+                <div class="error">{{ msg }}</div>
+                {% else %}
+                <div class="info">{{ msg }}</div>
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endwith %}                    
+        </div>
+        <h2>Create New User</h2>
+        <div class="tableFixHead">
+            <table>
+                <tr>
+                    <th> User Name </th>
+                    <th> Timestamp </th>
+                </tr>
+                {% for user in users %}
+                <tr>
+                    <td>{{user.name}}</td>
+                    <td>{{user.timestamp}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div>
+        <form action="{{url_for('create')}}" method="post" id="myform">            
+            <label for="username"><b>Please enter new user name:</b></label>          
+            <input type = "text" name="username" id="username" value="">    
+            <input type="hidden" name="instruct" id="instruct">       
+            <button type="button" class="w3-button" onclick="onclickbut('submit')">Submit</button>
+            <button type="button" class="w3-button" onclick="onclickbut('back')">Main Page</button>
+        </form>
+        </div>
+    </div>    
+
+    <script>
+        function onclickbut(instruc){
+            let instr=document.getElementById("instruct");
+            instr.value=instruc;
+            document.getElementById("myform").submit();
+        }
+    </script>
+</body>
+</html>
