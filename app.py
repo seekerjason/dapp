@@ -45,7 +45,7 @@ except Exception as eex:
 
 
 #==========================Initialize Telegram===============================
-telegram_key=app.config['TELEGRAM_KEY']
+telegram_key=getkey('TELEGRAM_KEY')
 BASE_URL = f'https://api.telegram.org/bot{telegram_key}/'
 
 #==========================Initialize Diffusion Model========================
@@ -61,7 +61,7 @@ diffusionmodel = None
 # google api is from https://makersuite.google.com
 # Run locally based on the configuration file, uncomment the following two lines
 #app.config.from_pyfile("config.py", silent=True) 
-gemini_key=app.config['GEMINI_KEY']
+gemini_key=getkey('GEMINI_KEY')
 genai.configure(api_key=gemini_key)
 model= genai.GenerativeModel("gemini-2.0-flash-001") #gemini-1.5-flash
 
