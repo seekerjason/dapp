@@ -7,6 +7,7 @@ import sqlite3
 import datetime
 import time
 import requests
+import json
 
 #====================initialize app=====================================
 app=Flask(__name__)
@@ -26,6 +27,10 @@ def getkey(key):
     if api_key=='':
         # get from environment variables
         api_key = os.getenv(key)
+        if api_key is None or api_key=="":
+            with open('config.json', 'r') as file:
+                ret=json.load(file)
+                api_key=ret[key]
     return api_key            
             
 
@@ -46,8 +51,10 @@ BASE_URL = f'https://api.telegram.org/bot{telegram_key}/'
 #==========================Initialize Diffusion Model========================
 import torch
 from diffusers import StableDiffusionPipeline
+
 diffusionmodel = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16)
-diffusionmodel = diffusionmodel.to("cuda") #cuda, or cpu   gpu 
+#diffusionmodel = diffusionmodel.to("cuda") #cuda, or cpu   gpu 
+#pipe.save_pretrained("./stable_diffusion_cpu")
 
 #=========================Initialize Gemini================================= 
 # google api is from https://makersuite.google.com
@@ -242,14 +249,15 @@ def telegram_func(type, command, note, thepage):
         if prevmsg_id!=bmsg_id:
             print(f"User ({chat_id}) previous message id={prevmsg_id}, new messageid={bmsg_id}...")
             if type=="image": #image
-                image = diffusionmodel(text).images[0]
-                image_path = "/content/image.png"
-                image.save(image_path)
-                image_caption = "stable-diffusion"
-                data = {"chat_id": chat_id, "caption": image_caption}
-                url = f"{BASE_URL}sendPhoto?chat_id={chat_id}"
-                with open(image_path, "rb") as image_file:
-                    requests.post(url, data=data, files={"photo": image_file})
+                with torch.no_grad():
+                    image = diffusionmodel(text).images[0]
+                    image_path = "/content/image.png"
+                    image.save(image_path)
+                    image_caption = "stable-diffusion"
+                    data = {"chat_id": chat_id, "caption": image_caption}
+                    url = f"{BASE_URL}sendPhoto?chat_id={chat_id}"
+                    with open(image_path, "rb") as image_file:
+                        requests.post(url, data=data, files={"photo": image_file})
                 send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
                 requests.get(send_url)
             else:
