@@ -13,8 +13,8 @@ app=Flask(__name__)
 #for local testing only, when depoly to Render, remove those keys
 app.config.from_mapping(
     # a default secret that should be overridden by instance config
-    GEMINI_KEY="AIzaSyC6IXrrGiBV9VMj-FYV-XsUun7FczKbAas",
-    TELEGRAM_KEY="7509569845:AAH47XIghodP5AJdkW3PabSWDzzAGqlFVMM"
+    GEMINI_KEY="",
+    TELEGRAM_KEY=""
 )
 currentuser=""
 usersession={}
