@@ -49,10 +49,11 @@ telegram_key=app.config['TELEGRAM_KEY']
 BASE_URL = f'https://api.telegram.org/bot{telegram_key}/'
 
 #==========================Initialize Diffusion Model========================
-import torch
-from diffusers import StableDiffusionPipeline
+#import torch
+#from diffusers import StableDiffusionPipeline
 
-diffusionmodel = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16)
+#diffusionmodel = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16)
+diffusionmodel = None
 #diffusionmodel = diffusionmodel.to("cuda") #cuda, or cpu   gpu 
 #pipe.save_pretrained("./stable_diffusion_cpu")
 
