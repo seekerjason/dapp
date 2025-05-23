@@ -1,8 +1,12 @@
 flask
 google-generativeai
-gunicorn
 diffusers==0.22.1
 transformers
+accelerate
+hf_xet
+torch
+numpy
+pandas
 scipy 
 ftfy 
-accelerate
+gunicorn
