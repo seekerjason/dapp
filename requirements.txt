@@ -10,5 +10,6 @@ pandas
 scipy 
 ftfy 
 gunicorn
-torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
+torchvision 
+torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
 pillow
