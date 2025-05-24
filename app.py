@@ -102,6 +102,9 @@ def main():
         elif bvalue=='Telegramimage':
             usersession={}
             return redirect(url_for("telegramimage"))
+        elif bvalue=='Telegramwebhook':
+            usersession={}
+            return redirect(url_for("telegramwebhook"))
         else:
             flash(f"invalid Instruction ({bvalue})!",'error')
     
@@ -348,6 +351,18 @@ def telegramimage():
     print("in telegramimage......")
     return telegram_func("image", "Welcome to prediction image, please enter words for the image or quit", None, 'telegramimage.html')
 
+@app.route("/telegramwebhook", methods=["POST"])
+def telegramwebhook():
+    if request.form.get("instruct")=='back':
+        '''for item in usersession.keys():
+            send_url = BASE_URL + f'sendMessage?chat_id={int(item)}&text={"Host Exit from the bot. Bye!"}'
+            requests.get(send_url)'''
+        return redirect(url_for('main'))
+    data = request.json
+    if 'message' in data:
+        message_text = data['message']['text']
+        print(f"New message: {message_text}")
+    return "OK", 200
 
 if __name__=="__main__":
     app.run()

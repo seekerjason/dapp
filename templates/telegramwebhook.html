@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="2"> 
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
+    <script>
+        async function fetchMessages() {
+            let response = await fetch('/webhook');
+            let data = await response.text();
+            //document.getElementById("messages").innerText = data;
+        }
+        setInterval(fetchMessages, 5000); // Refresh every 5 seconds
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Telegram Bot</h2>
+        <form action="{{url_for('telegram')}}" method="post" id="myform">
+            <input type="hidden" id="instruct" name="instruct" value="">
+            <!--button type="button" onclick="clickButton('start')">Start Telegram</button-->
+            <button type="button" onclick="clickButton('back')">Main Page</button>
+        </form>
+   </div>
+
+    <script>
+        function clickButton(command){
+            console.log("command="+command);
+            instruction=document.getElementById("instruct");
+            instruction.value=command;
+            document.getElementById("myform").submit();
+        }
+
+    </script>    
+</body>
+</html>
