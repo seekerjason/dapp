@@ -8,6 +8,7 @@ import datetime
 import time
 import requests
 import json
+import pandas as pd
 
 #====================initialize app=====================================
 app=Flask(__name__)
@@ -64,6 +65,9 @@ diffusionmodel = None
 gemini_key=getkey('GEMINI_KEY')
 genai.configure(api_key=gemini_key)
 model= genai.GenerativeModel("gemini-2.0-flash-001") #gemini-1.5-flash
+
+#========================DBS data prediction===============================
+dbs_df = pd.read_csv("data/DBS_SingDollar.csv")
 
 #========================= page handlers ===================================
 @app.route("/", methods=['GET', 'POST'])
@@ -215,7 +219,105 @@ def gemini_reply():
 def paynow():
     return render_template("paynow.html")
 
-def telegram_func(type, command, note, thepage):
+def getlastmessages(rmsg, command):
+    global usersession
+    r1=rmsg.json()
+    r1=r1["result"]
+    print(f"message queue size={len(r1)}")
+    if len(r1)==0:  
+        return False
+    
+    # For loop to initalize the usersessions when setfirstid=True or find last message id
+    for item in r1:
+        keys=item.keys()
+        
+        if 'edited_message' in keys: # when previous prompt is modified to be the new prompt
+            itm=item['edited_message']
+        elif 'message' in keys:
+            itm=item['message']
+        else:
+           raise Exception("Unknown message key!")
+
+        chat_id=str(itm['chat']['id']) # convert chat id to string for dict type key 
+        msg=itm['text']
+        msg_id=itm['message_id']
+
+        if chat_id in usersession: # for a user exists in the session list
+            # find the last message id and set to user session lastmsgid attribute
+            if msg_id>usersession[chat_id]['lastmsgid']:
+                orfirstid=usersession[chat_id]['firstid'] #keep the original firstid at this moment for the usersession under this chat_id
+                orstatus=usersession[chat_id]['status']
+                usersession.update({chat_id:{'firstid':orfirstid, 'lastmsgid':msg_id, "msg":msg,'status':orstatus}})
+                #print(f"update {chat_id} with {usersessions[chat_id]}")
+        else: # for a user not in the session list
+            usersession.update({chat_id:{'firstid':0,'msg':"", 'lastmsgid':0, 'status':'active'}})
+            print(f"set first question to chat_id={chat_id}....")
+            send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
+            requests.get(send_url)
+    return True
+
+def setModelResponse(dtype, command, note, chat_id, text):
+    if dtype=='image':
+        #with torch.no_grad():
+        image = diffusionmodel(text).images[0]
+        image_path = "/content/image.png"
+        image.save(image_path)
+        image_caption = "stable-diffusion"
+        data = {"chat_id": chat_id, "caption": image_caption}
+        url = f"{BASE_URL}sendPhoto?chat_id={chat_id}"
+        with open(image_path, "rb") as image_file:
+            requests.post(url, data=data, files={"photo": image_file})
+        send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
+        requests.get(send_url)
+    else:
+        if text.isnumeric():
+            msg = str(float(text) * 0.2 + 100)
+        else:
+            msg = note
+        send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={msg}'
+        requests.get(send_url)
+        send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
+        requests.get(send_url)
+
+def handleNewMessage(dtype, command, note):
+    global usersession
+    # update firstid with lastmsgid      
+
+    nkeys=usersession.keys()
+    keys=list(nkeys)
+    for chat_id in keys:
+        msg_id = usersession[chat_id]['lastmsgid']
+        firstid= usersession[chat_id]['firstid']
+        msg=usersession[chat_id]['msg']
+        status=usersession[chat_id]['status']
+        if msg_id>firstid : # update firstid with msg_id
+            usersession[chat_id]={'firstid':msg_id,"msg":msg, 'lastmsgid':msg_id,'status':status}
+            print(f"for {chat_id}, new masg_id={msg_id}, firstid={firstid}")
+            if firstid==0:
+                continue 
+        else: # msg_id==firstid
+            continue
+        
+        print(f"new message coming for chat_id ({chat_id}), lastmsgid= {msg_id}, firstid={firstid}, msg={msg}, status={status}")
+        
+        if status=='active':
+            if str.lower(msg)=='quit':
+                #usersessions.pop(chat_id, None) # remove usersession from the session list
+                usersession[chat_id]={'firstid':msg_id,"msg":'quit','lastmsgid':msg_id,'status':'inactive'}
+                print(f"quit case: {chat_id}={usersession[chat_id]}")
+                requests.get(BASE_URL+f"sendMessage?chat_id={chat_id}&text={'Bye! If you want to rejoin, please type mjbot'}")
+            else:
+                setModelResponse(dtype, command, note, chat_id, msg)
+        else: # status==inactive
+            if str.lower(msg)=='mjbot':              
+                usersession[chat_id]={'firstid':0,"msg":msg, 'lastmsgid':msg_id,'status':'active'}
+                send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
+                requests.get(send_url)
+    # ENd for Loop
+    return True
+
+
+def telegram_func(dtype, command, note, thepage):
     global usersession
     print(f"in telegram_func, command={command}......")
     if request.method=='POST':
@@ -232,57 +334,20 @@ def telegram_func(type, command, note, thepage):
     if len(data['result'])==0:
         return render_template(thepage)
     
-    text = data['result'][-1]['message']['text']
-    chat_id = data['result'][-1]['message']['chat']['id']
-    bmsg_id=data['result'][-1]['message']['message_id']
-    print("Text:", text)
-    print("Chat ID:", chat_id)
-
-    #sceniro 0: new message. add user to usersession with chat_id
-    if str(chat_id) not in usersession:
-        usersession[str(chat_id)]=bmsg_id
-        send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
-        requests.get(send_url)
-        print(f"Add new user {chat_id}...")
-    else:
-        prevmsg_id=usersession[str(chat_id)]
-        #sceniro 1: for chat_id, if bmsg_id!=amsg_id, got input, process
-        if prevmsg_id!=bmsg_id:
-            print(f"User ({chat_id}) previous message id={prevmsg_id}, new messageid={bmsg_id}...")
-            if type=="image": #image
-                with torch.no_grad():
-                    image = diffusionmodel(text).images[0]
-                    image_path = "/content/image.png"
-                    image.save(image_path)
-                    image_caption = "stable-diffusion"
-                    data = {"chat_id": chat_id, "caption": image_caption}
-                    url = f"{BASE_URL}sendPhoto?chat_id={chat_id}"
-                    with open(image_path, "rb") as image_file:
-                        requests.post(url, data=data, files={"photo": image_file})
-                send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
-                requests.get(send_url)
-            else:
-                if text.isnumeric():
-                    msg = str(float(text) * 0.2 + 100)
-                else:
-                    msg = note
-                send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={msg}'
-                requests.get(send_url)
-                send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
-                requests.get(send_url)
-            usersession[str(chat_id)]=bmsg_id #update usersession with the new msg_id
-        #sceniro 2: for chat_id, if bmsg_id==amsg_id, no input, return
+    if getlastmessages(response, command):
+        handleNewMessage(dtype, command, note)
     return(render_template(thepage))
 
 @app.route("/telegram", methods=["GET","POST"])
 def telegram():
     print("in telegram......")
-    return telegram_func("salary", "Welcome to prediction, please enter the salary", "salary must be a number", 'telegram.html')
+    return telegram_func("salary", "Welcome to prediction, please enter the salary or quit", "salary must be a number", 'telegram.html')
 
 @app.route("/telegramimage", methods=["GET","POST"])
 def telegramimage():
     print("in telegramimage......")
-    return telegram_func("image", "Welcome to prediction image, please enter words for the image", None, 'telegramimage.html')
+    return telegram_func("image", "Welcome to prediction image, please enter words for the image or quit", None, 'telegramimage.html')
+
 
 if __name__=="__main__":
     app.run()
