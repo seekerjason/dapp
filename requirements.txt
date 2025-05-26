@@ -1,16 +1,16 @@
 flask
 requests
 google-generativeai
-diffusers==0.22.1
-transformers
-accelerate
-hf_xet
-torch
-numpy
-#pandas
-scipy 
-ftfy 
 gunicorn
+#numpy
+#pandas
+#diffusers==0.22.1
+#transformers
+#accelerate
+#hf_xet
+#torch
+#scipy 
+#ftfy 
 #torchvision 
 #torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
 #pillow

@@ -353,9 +353,9 @@ def telegramimage():
     return telegram_func("advisor", "Welcome to financial advisor bot, please enter your financial related questions or quit", None, 'telegramimage.html')
 
 def start_telegram():
-    domain_url = os.getenv('WEBHOOK_URL')
-
     # The following line is used to delete the existing webhook URL for the Telegram bot
+    print("in start_telegram .....")
+    domain_url = os.getenv('WEBHOOK_URL')
     delete_webhook_url = f"{BASE_URL}deleteWebhook"
     requests.post(delete_webhook_url, json={"url": domain_url, "drop_pending_updates": True})
     
@@ -368,7 +368,8 @@ def start_telegram():
         status = "The telegram bot is running. Please check with the telegram bot."
     else:
         status = "Failed to start the telegram bot. Please check the logs."
-    
+
+    status=200    
     return(render_template("telegramwebhook.html", status=status))
 
 @app.route("/telegramwebhook", methods=["POST"])
