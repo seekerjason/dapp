@@ -232,7 +232,7 @@ def getlastmessages(rmsg, command):
     if len(r1)==0:  
         return False
     
-    # For loop to initalize the usersessions when setfirstid=True or find last message id
+    # For loop to initalize the usersessions when setfirstid=True or find last message id    
     for item in r1:
         keys=item.keys()
         
@@ -362,12 +362,12 @@ def start_telegram():
     requests.post(delete_webhook_url, json={"url": domain_url, "drop_pending_updates": True})
     
     # Set the webhook URL for the Telegram bot
-    set_webhook_url = f"{BASE_URL}setWebhook?url={domain_url}/telegram"
+    set_webhook_url = f"{BASE_URL}setWebhook?url={domain_url}/telegramwebhook"
     webhook_response = requests.post(set_webhook_url, json={"url": domain_url, "drop_pending_updates": True})
     print('webhook:', webhook_response)
     if webhook_response.status_code == 200:
         # set status message
-        status = "The telegram bot is running. Please check with the telegram bot. @gemini_tt_bot"
+        status = "The telegram bot is running. Please check with the telegram bot."
     else:
         status = "Failed to start the telegram bot. Please check the logs."
     
