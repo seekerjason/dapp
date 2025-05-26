@@ -375,7 +375,7 @@ def prediction():
         
         q=request.form.get("q")
         print(f"q={q}")
-        q=float(q)*0.06
+        q=90.2 + (-50.6*float(q))
         return render_template("result.html", resp=str(q))
     return render_template("prediction.html")
 
