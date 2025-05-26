@@ -103,8 +103,7 @@ def main():
             usersession={}
             return redirect(url_for("telegramimage"))
         elif bvalue=='Telegramwebhook':
-            usersession={}
-            return redirect(url_for("start_telegram"))
+            return start_telegram()
         elif bvalue=='Prediction':
             return redirect(url_for("prediction"))
         else:
@@ -353,7 +352,6 @@ def telegramimage():
     print("in telegramimage......")
     return telegram_func("advisor", "Welcome to financial advisor bot, please enter your financial related questions or quit", None, 'telegramimage.html')
 
-@app.route("/start_telegram",methods=["GET","POST"])
 def start_telegram():
     domain_url = os.getenv('WEBHOOK_URL')
 
