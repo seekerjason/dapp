@@ -104,7 +104,7 @@ def main():
             return redirect(url_for("telegramimage"))
         elif bvalue=='Telegramwebhook':
             usersession={}
-            return redirect(url_for("telegramwebhook"))
+            return redirect(url_for("start_telegram"))
         elif bvalue=='Prediction':
             return redirect(url_for("prediction"))
         else:
@@ -262,18 +262,15 @@ def getlastmessages(rmsg, command):
     return True
 
 def setModelResponse(dtype, command, note, chat_id, text):
-    if dtype=='image':
-        #with torch.no_grad():
-        image = diffusionmodel(text).images[0]
-        image_path = "/content/image.png"
-        image.save(image_path)
-        image_caption = "stable-diffusion"
-        data = {"chat_id": chat_id, "caption": image_caption}
-        url = f"{BASE_URL}sendPhoto?chat_id={chat_id}"
-        with open(image_path, "rb") as image_file:
-            requests.post(url, data=data, files={"photo": image_file})
+    if dtype=='advisor': #change to financail advisor. system prompt As a financial advisor, please only answer financial related questions. 
+        
+        r= model.generate_content(text)
+        sprompt=note+". "+r.text
+        send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={sprompt}'
+        requests.get(send_url)
         send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
         requests.get(send_url)
+
     else:
         if text.isnumeric():
             msg = str(float(text) * 0.2 + 100)
@@ -336,6 +333,9 @@ def telegram_func(dtype, command, note, thepage):
     #time.sleep(5) #ensure telegram is activated
     response = requests.get(BASE_URL + 'getUpdates')
     data = response.json()
+    if 'result' not in data:
+        return render_template(thepage)
+        
     if len(data['result'])==0:
         return render_template(thepage)
     
@@ -351,20 +351,56 @@ def telegram():
 @app.route("/telegramimage", methods=["GET","POST"])
 def telegramimage():
     print("in telegramimage......")
-    return telegram_func("image", "Welcome to prediction image, please enter words for the image or quit", None, 'telegramimage.html')
+    return telegram_func("advisor", "Welcome to financial advisor bot, please enter your financial related questions or quit", None, 'telegramimage.html')
+
+@app.route("/start_telegram",methods=["GET","POST"])
+def start_telegram():
+    domain_url = os.getenv('WEBHOOK_URL')
+
+    # The following line is used to delete the existing webhook URL for the Telegram bot
+    delete_webhook_url = f"{BASE_URL}deleteWebhook"
+    requests.post(delete_webhook_url, json={"url": domain_url, "drop_pending_updates": True})
+    
+    # Set the webhook URL for the Telegram bot
+    set_webhook_url = f"{BASE_URL}setWebhook?url={domain_url}/telegram"
+    webhook_response = requests.post(set_webhook_url, json={"url": domain_url, "drop_pending_updates": True})
+    print('webhook:', webhook_response)
+    if webhook_response.status_code == 200:
+        # set status message
+        status = "The telegram bot is running. Please check with the telegram bot. @gemini_tt_bot"
+    else:
+        status = "Failed to start the telegram bot. Please check the logs."
+    
+    return(render_template("telegramwebhook.html", status=status))
 
 @app.route("/telegramwebhook", methods=["POST"])
 def telegramwebhook():
-    if request.form.get("instruct")=='back':
-        '''for item in usersession.keys():
-            send_url = BASE_URL + f'sendMessage?chat_id={int(item)}&text={"Host Exit from the bot. Bye!"}'
-            requests.get(send_url)'''
-        return redirect(url_for('main'))
-    data = request.json
-    if 'message' in data:
-        message_text = data['message']['text']
-        print(f"New message: {message_text}")
-    return "OK", 200
+    update = request.get_json()
+    if "message" in update and "text" in update["message"]:
+        # Extract the chat ID and message text from the update
+        chat_id = update["message"]["chat"]["id"]
+        text = update["message"]["text"]
+
+        if text == "/start":
+            r_text = "Welcome to the Gemini Telegram Bot! You can ask me any finance-related questions."
+        else:
+            # Process the message and generate a response
+            system_prompt = "You are a financial expert.  Answer ONLY questions related to finance, economics, investing, and financial markets. If the question is not related to finance, state that you cannot answer it."
+            prompt = f"{system_prompt}\n\nUser Query: {text}"
+            #r = genmini_client.models.generate_content(
+            #    model=genmini_model,
+            #    contents=prompt
+            #)
+            #r_text = r.text
+            r_text="dummmy response"
+        # Send the response back to the user
+        send_message_url = f"{BASE_URL}sendMessage"
+        requests.post(send_message_url, data={"chat_id": chat_id, "text": r_text})
+    # Return a 200 OK response to Telegram
+    # This is important to acknowledge the receipt of the message
+    # and prevent Telegram from resending the message
+    # if the server doesn't respond in time
+    return('ok', 200)
 
 @app.route("/prediction", methods=["GET","POST"])
 def prediction():
