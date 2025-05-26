@@ -1,0 +1,29 @@
+<head>
+    <meta name ="viewport" content ="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="static/styles.css">
+
+</head>
+
+<body>
+<div class="container">
+    <h2>The predicted value is {{resp}} </h2>
+    <form id="myform" action = "{{url_for('predictionreply')}}" method = "post">
+        <input type="hidden" id="instruct" name="instruct" value="">
+        <button type="button" onclick="clickButton('predict')">Predict</button>
+        <button type="button" onclick="clickButton('back')">Main Page</button>
+    </form>
+    </div>
+
+</div>
+<script>
+    function clickButton(command){
+        console.log("command="+command);
+        instruction=document.getElementById("instruct");
+        instruction.value=command;
+        document.getElementById("myform").submit();
+    }
+
+</script>    
+
+</body>
+</html>

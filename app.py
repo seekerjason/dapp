@@ -8,7 +8,7 @@ import datetime
 import time
 import requests
 import json
-import pandas as pd
+#import pandas as pd
 
 #====================initialize app=====================================
 app=Flask(__name__)
@@ -67,7 +67,7 @@ genai.configure(api_key=gemini_key)
 model= genai.GenerativeModel("gemini-2.0-flash-001") #gemini-1.5-flash
 
 #========================DBS data prediction===============================
-dbs_df = pd.read_csv("data/DBS_SingDollar.csv")
+#dbs_df = pd.read_csv("data/DBS_SingDollar.csv")
 
 #========================= page handlers ===================================
 @app.route("/", methods=['GET', 'POST'])
@@ -105,6 +105,8 @@ def main():
         elif bvalue=='Telegramwebhook':
             usersession={}
             return redirect(url_for("telegramwebhook"))
+        elif bvalue=='Prediction':
+            return redirect(url_for("prediction"))
         else:
             flash(f"invalid Instruction ({bvalue})!",'error')
     
@@ -363,6 +365,29 @@ def telegramwebhook():
         message_text = data['message']['text']
         print(f"New message: {message_text}")
     return "OK", 200
+
+@app.route("/prediction", methods=["GET","POST"])
+def prediction():
+    q=0.01
+    if request.method=='POST':
+        if request.form.get("instruct")=='back':
+            return redirect(url_for('main'))
+        
+        q=request.form.get("q")
+        print(f"q={q}")
+        q=float(q)*0.06
+        return render_template("result.html", resp=str(q))
+    return render_template("prediction.html")
+
+@app.route("/predictionreply", methods=["GET","POST"])
+def predictionreply():
+    if request.method=='POST':
+        if request.form.get("instruct")=='back':
+            return redirect(url_for('main'))
+        else:
+            return redirect(url_for('prediction'))
+
+    return render_template("result.html")
 
 if __name__=="__main__":
     app.run()
