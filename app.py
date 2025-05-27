@@ -375,7 +375,7 @@ def starttelegram():
             status = "Failed to start the telegram bot. Please check the logs."
     else:
         status = "Failed to stop the previous telegram bot. Please check the logs."    
-    return(redirect(url_for("telegramwebhook"), status=status))
+    return(redirect(url_for("telegramwebhook", status=status)))
 
 def stoptelegram():
     domain_url = os.getenv('WEBHOOK_URL')
@@ -386,8 +386,9 @@ def stoptelegram():
 
 @app.route("/telegramwebhook", methods=["Get", "POST"])
 def telegramwebhook():
-    status="Something wrong with the webhook. Please go back to Main Page and restart the bot!"
+    status = request.args.get('status')
     if request.method=='POST':
+        status="Something wrong with the webhook. Please go back to Main Page and restart the bot!"
         instruct = request.form.get("instruct")
         if instruct=='back' :
             stoptelegram()
