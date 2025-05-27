@@ -375,7 +375,7 @@ def starttelegram():
             status = "Failed to start the telegram bot. Please check the logs."
     else:
         status = "Failed to stop the previous telegram bot. Please check the logs."    
-    return(render_template("telegramwebhook.html", status=status))
+    return(redirect(url_for("telegramwebhook"), status=status))
 
 def stoptelegram():
     domain_url = os.getenv('WEBHOOK_URL')
