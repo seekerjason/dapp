@@ -4,14 +4,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="2"> 
     <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
-    <script>
-        async function fetchMessages() {
-            let response = await fetch('/webhook');
-            let data = await response.text();
-            //document.getElementById("messages").innerText = data;
-        }
-        setInterval(fetchMessages, 5000); // Refresh every 5 seconds
-    </script>
 </head>
 
 <body>
