@@ -386,6 +386,7 @@ def stoptelegram():
 
 @app.route("/telegramwebhook", methods=["Get", "POST"])
 def telegramwebhook():
+    status="Something wrong with the webhook. Please go back to Main Page and restart the bot!"
     if request.method=='POST':
         instruct = request.form.get("instruct")
         if instruct=='back' :
@@ -408,13 +409,15 @@ def telegramwebhook():
                     r_text = r.text
                 # Send the response back to the user
                 send_message_url = f"{BASE_URL}sendMessage"
-                requests.post(send_message_url, data={"chat_id": chat_id, "text": r_text})
+                resp=requests.post(send_message_url, data={"chat_id": chat_id, "text": r_text})
+                if resp.status_code==200:
+                    status="Telegram webhook is running. Please click 'Main Page' to stop the webhook and exit!"
             # Return a 200 OK response to Telegram
             # This is important to acknowledge the receipt of the message
             # and prevent Telegram from resending the message
             # if the server doesn't respond in time
-            return('ok', 200)
-    return render_template("telegramwebhook.html", status="Telegram webhook is running. Please click 'Main Page' to stop the webhook and exit!")
+
+    return render_template("telegramwebhook.html", status=status)
 
 
 @app.route("/prediction", methods=["GET","POST"])
