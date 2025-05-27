@@ -405,6 +405,7 @@ def telegramwebhook():
             return redirect(url_for('main'))
         else:
             update = request.get_json()
+            cstatus=404
             if "message" in update and "text" in update["message"]:
                 # Extract the chat ID and message text from the update
                 chat_id = update["message"]["chat"]["id"]
@@ -425,6 +426,8 @@ def telegramwebhook():
                 resp=requests.post(send_message_url, data={"chat_id": chat_id, "text": r_text})
                 if resp.status_code==200:
                     status="Telegram webhook is running. Please click 'Main Page' to stop the webhook and exit!"
+                cstatus=resp.status_code
+            return (status, cstatus)
             # Return a 200 OK response to Telegram
             # This is important to acknowledge the receipt of the message
             # and prevent Telegram from resending the message
