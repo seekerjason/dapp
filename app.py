@@ -358,6 +358,7 @@ def telegramimage():
 
 #setup telegram and start telegram
 def starttelegram():
+    global usersession
     usersession={}
     # The following line is used to delete the existing webhook URL for the Telegram bot
     print("in setuptelegram .....")
@@ -386,12 +387,21 @@ def stoptelegram():
 
 @app.route("/telegramwebhook", methods=["Get", "POST"])
 def telegramwebhook():
+    global usersession
     status = request.args.get('status')
     if request.method=='POST':
         status="Something wrong with the webhook. Please go back to Main Page and restart the bot!"
         instruct = request.form.get("instruct")
         if instruct=='back' :
-            stoptelegram()
+            status=stoptelegram()
+            if status==200:
+                status = "Financial Advisor bot is stopped by host. See you again!"
+            else:
+                status = "Financial Advisor bot is stopped by host with some errors.Host will investigate the problem. See you again!"
+            for chat_id in usersession.keys():
+                send_message_url = f"{BASE_URL}sendMessage"
+                r_text=status
+                resp=requests.post(send_message_url, data={"chat_id": int(chat_id), "text": r_text})
             return redirect(url_for('main'))
         else:
             update = request.get_json()
@@ -409,6 +419,8 @@ def telegramwebhook():
                     r = genaimodel.generate_content(prompt)
                     r_text = r.text
                 # Send the response back to the user
+                if str(chat_id) not in usersession:
+                    usersession[str(chat_id)] = {'msg': r_text}
                 send_message_url = f"{BASE_URL}sendMessage"
                 resp=requests.post(send_message_url, data={"chat_id": chat_id, "text": r_text})
                 if resp.status_code==200:
