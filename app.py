@@ -36,7 +36,7 @@ def getkey(key):
             with open('config.json', 'r') as file:
                 ret=json.load(file)
                 api_key=ret[key]
-    print(f"getkey: {api_key}")
+    #print(f"getkey: {api_key}")
     return api_key            
             
 
@@ -55,12 +55,15 @@ telegram_key=getkey('TELEGRAM_KEY')
 BASE_URL = f'https://api.telegram.org/bot{telegram_key}/'
 
 #==========================Initialize SentenceTransformer Model========================
-import joblib
-from sentence_transformers import SentenceTransformer
+#import joblib
+#from sentence_transformers import SentenceTransformer
+#pre_trained_LRmodel1 = joblib.load("./content/model.pkl")
+#pre_trained_LRmodel1 = joblib.load(path)
+#pre_trained_LRmodel1.intercept_
+#bert_model = SentenceTransformer('bert-base-nli-mean-tokens')
 
-pre_trained_LRmodel1=joblib.load("./content/model.pkl") #pre_trained logisticRegression
-pre_trained_LRmodel1.intercept_
-bert_model = SentenceTransformer('bert-base-nli-mean-tokens')
+bert_model = None
+pre_trained_LRmodel1 = None
 
 #=========================Initialize Gemini================================= 
 # google api is from https://makersuite.google.com

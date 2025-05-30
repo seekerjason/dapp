@@ -22,5 +22,5 @@ gunicorn
 #ffmpeg-python
 #winget install ffmpeg
 
-joblib
-sentence_transformers
+#joblib
+#sentence_transformers
