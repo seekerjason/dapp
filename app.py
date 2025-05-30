@@ -54,14 +54,13 @@ except Exception as eex:
 telegram_key=getkey('TELEGRAM_KEY')
 BASE_URL = f'https://api.telegram.org/bot{telegram_key}/'
 
-#==========================Initialize Diffusion Model========================
-#import torch
-#from diffusers import StableDiffusionPipeline
+#==========================Initialize SentenceTransformer Model========================
+import joblib
+from sentence_transformers import SentenceTransformer
 
-#diffusionmodel = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype=torch.float16)
-diffusionmodel = None
-#diffusionmodel = diffusionmodel.to("cuda") #cuda, or cpu   gpu 
-#pipe.save_pretrained("./stable_diffusion_cpu")
+pre_trained_LRmodel1=joblib.load("./content/model.pkl") #pre_trained logisticRegression
+pre_trained_LRmodel1.intercept_
+bert_model = SentenceTransformer('bert-base-nli-mean-tokens')
 
 #=========================Initialize Gemini================================= 
 # google api is from https://makersuite.google.com
@@ -266,14 +265,16 @@ def getlastmessages(rmsg, command):
     return True
 
 def setModelResponse(dtype, command, note, chat_id, text):
-    if dtype=='advisor': #change to financail advisor. system prompt As a financial advisor, please only answer financial related questions. 
-        r= genaimodel.generate_content(text)
-        sprompt=note+". "+r.text
+    if dtype=='spam_checker': #spam check using pre_trained logisticRegression with google SentenceTransformers
+        X_bert = bert_model.encode(text)
+        pred = pre_trained_LRmodel1.predict([X_bert])
+        sprompt="This is not spam"
+        if pred=='spam':
+            sprompt='This is a spam!'
         send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={sprompt}'
         requests.get(send_url)
         send_url = BASE_URL + f'sendMessage?chat_id={chat_id}&text={command}'
         requests.get(send_url)
-
     else:
         if text.isnumeric():
             msg = str(float(text) * 0.2 + 100)
@@ -354,7 +355,7 @@ def telegram():
 @app.route("/telegramimage", methods=["GET","POST"])
 def telegramimage():
     print("in telegramimage......")
-    return telegram_func("advisor", "Welcome to financial advisor bot, please enter your financial related questions or quit", None, 'telegramimage.html')
+    return telegram_func("spam_checker", "Welcome to spam checker bot, please enter the message you want to check or quit", None, 'telegramimage.html')
 
 #setup telegram and start telegram
 def starttelegram():
